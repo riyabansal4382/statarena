@@ -811,7 +811,11 @@ async function espnStandings(sport: string, league: string): Promise<Standings |
   const path = espnLeaguePath(sport, league);
   if (!path) return null;
   try {
-    const res = await fetch(`https://site.api.espn.com/apis/v2/sports/${path}/standings`);
+    const yearMatch = league.match(/\b(19|20)\d{2}\b/);
+    const season = yearMatch ? yearMatch[0] : null;
+    const res = await fetch(
+      `https://site.api.espn.com/apis/v2/sports/${path}/standings${season ? `?season=${season}` : ""}`,
+    );
     if (!res.ok) return null;
     const d = (await res.json()) as {
       name?: string;
@@ -835,8 +839,8 @@ async function espnStandings(sport: string, league: string): Promise<Standings |
       }));
       rows.sort((a, b) => a.rank - b.rank);
       return {
-        title: `F1 ${child.name ?? "Standings"}`,
-        subtitle: "Current season · live from ESPN",
+        title: `F1 ${child.name ?? "Standings"}${season ? ` ${season}` : ""}`,
+        subtitle: `${season ? `${season} season` : "Current season"} · live from ESPN`,
         columns: ["Pts"],
         rows: rows.filter((r) => r.name).slice(0, 24),
         source: "espn",
